@@ -2,9 +2,9 @@ module Cell exposing (..)
 
 type Cell = X | O | Empty
 
-show : Cell -> String
-show cell =
+iconClass : Cell -> String
+iconClass cell =
   case cell of
-    Empty -> "-"
-    X -> "x"
-    O -> "o"
+    Empty -> ""
+    X -> "fa fa-times ex"
+    O -> "fa fa-circle-o oh"

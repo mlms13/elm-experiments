@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Html exposing (Html, button, div, text, table, tr, td, p)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List exposing (map, indexedMap)
 import Board exposing (..)
@@ -64,7 +65,12 @@ update msg model =
 
 renderCell : Int -> Cell -> Html Msg
 renderCell index cell =
-  div [onClick (Set index)] [text (show cell)]
+  case cell of
+    Empty ->
+      div [onClick (Set index)] []
+    _ ->
+      div []
+        [ Html.i [ class <| iconClass cell ] []]
 
 
 renderBoard : Board a -> (Int -> a -> Html msg) -> Html msg
