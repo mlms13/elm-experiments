@@ -8505,14 +8505,7 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
-var _user$project$Board$setAt = F3(
-	function (cell, val, board) {
-		return A3(_elm_lang$core$Array$set, cell, val, board);
-	});
 var _user$project$Board$size = 3;
-var _user$project$Board$fill = function (a) {
-	return A2(_elm_lang$core$Array$repeat, _user$project$Board$size * _user$project$Board$size, a);
-};
 var _user$project$Board$toRectangle = function (board) {
 	var _p0 = _elm_lang$core$Native_Utils.cmp(
 		_elm_lang$core$Array$length(board),
@@ -8533,26 +8526,137 @@ var _user$project$Board$toRectangle = function (board) {
 			_user$project$Board$toRectangle(t));
 	}
 };
-
-var _user$project$Cell$iconClass = function (cell) {
-	var _p0 = cell;
-	switch (_p0.ctor) {
-		case 'Empty':
-			return '';
-		case 'X':
-			return 'fa fa-times ex';
-		default:
-			return 'fa fa-circle-o oh';
+var _user$project$Board$iconClassForPlayer = function (player) {
+	var _p1 = player;
+	if (_p1.ctor === 'Ex') {
+		return 'fa fa-times ex';
+	} else {
+		return 'fa fa-circle-o oh';
 	}
 };
-var _user$project$Cell$Empty = {ctor: 'Empty'};
-var _user$project$Cell$O = {ctor: 'O'};
-var _user$project$Cell$X = {ctor: 'X'};
+var _user$project$Board$Win = F2(
+	function (a, b) {
+		return {ctor: 'Win', _0: a, _1: b};
+	});
+var _user$project$Board$Draw = {ctor: 'Draw'};
+var _user$project$Board$InGame = {ctor: 'InGame'};
+var _user$project$Board$Oh = {ctor: 'Oh'};
+var _user$project$Board$Ex = {ctor: 'Ex'};
+var _user$project$Board$Val = function (a) {
+	return {ctor: 'Val', _0: a};
+};
+var _user$project$Board$setValueAt = F3(
+	function (cell, val, board) {
+		return A3(
+			_elm_lang$core$Array$set,
+			cell,
+			_user$project$Board$Val(val),
+			board);
+	});
+var _user$project$Board$check = function (board) {
+	var toStatus = F2(
+		function (player, tup) {
+			var _p2 = tup;
+			if (_p2.ctor === 'Just') {
+				return A2(_user$project$Board$Win, player, _p2._0);
+			} else {
+				return _user$project$Board$InGame;
+			}
+		});
+	var winConH = F3(
+		function (offset, cell, board) {
+			return _elm_lang$core$Native_Utils.eq(
+				_elm_lang$core$Array$length(
+					A2(
+						_elm_lang$core$Array$filter,
+						function (c) {
+							return _elm_lang$core$Native_Utils.eq(c, cell);
+						},
+						A3(_elm_lang$core$Array$slice, offset, offset + _user$project$Board$size, board))),
+				_user$project$Board$size) ? _elm_lang$core$Maybe$Just(
+				{ctor: '_Tuple2', _0: offset, _1: offset + _user$project$Board$size}) : _elm_lang$core$Maybe$Nothing;
+		});
+	var allWinCon = F2(
+		function (cell, board) {
+			return A3(
+				_elm_lang$core$List$foldl,
+				F2(
+					function (off, res) {
+						var _p3 = res;
+						if (_p3.ctor === 'Nothing') {
+							return A3(winConH, off * _user$project$Board$size, cell, board);
+						} else {
+							return res;
+						}
+					}),
+				_elm_lang$core$Maybe$Nothing,
+				A2(_elm_lang$core$List$range, 0, _user$project$Board$size));
+		});
+	var checkCells = F2(
+		function (list, board) {
+			return A3(
+				_elm_lang$core$List$foldl,
+				F2(
+					function (player, res) {
+						var _p4 = {ctor: '_Tuple2', _0: player, _1: res};
+						if ((_p4._0.ctor === 'Val') && (_p4._1.ctor === 'InGame')) {
+							return A2(
+								toStatus,
+								_p4._0._0,
+								A2(allWinCon, player, board));
+						} else {
+							return res;
+						}
+					}),
+				_user$project$Board$InGame,
+				A2(_elm_lang$core$List$map, _user$project$Board$Val, list));
+		});
+	return A2(
+		checkCells,
+		{
+			ctor: '::',
+			_0: _user$project$Board$Ex,
+			_1: {
+				ctor: '::',
+				_0: _user$project$Board$Oh,
+				_1: {ctor: '[]'}
+			}
+		},
+		board);
+};
+var _user$project$Board$Empty = {ctor: 'Empty'};
+var _user$project$Board$empty = A2(_elm_lang$core$Array$repeat, _user$project$Board$size * _user$project$Board$size, _user$project$Board$Empty);
 
+var _user$project$Main$renderStatus = function (status) {
+	var s = function () {
+		var _p0 = status;
+		switch (_p0.ctor) {
+			case 'Draw':
+				return 'Draw';
+			case 'InGame':
+				return 'In game';
+			default:
+				if (_p0._0.ctor === 'Ex') {
+					return 'Ex wins!';
+				} else {
+					return 'Oh wins!';
+				}
+		}
+	}();
+	return A2(
+		_elm_lang$html$Html$p,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text(
+				A2(_elm_lang$core$Basics_ops['++'], 'Status: ', s)),
+			_1: {ctor: '[]'}
+		});
+};
 var _user$project$Main$renderPlayer = function (player) {
 	var playerName = function () {
-		var _p0 = player;
-		if (_p0.ctor === 'Ex') {
+		var _p1 = player;
+		if (_p1.ctor === 'Ex') {
 			return 'ex';
 		} else {
 			return 'oh';
@@ -8569,7 +8673,7 @@ var _user$project$Main$renderPlayer = function (player) {
 		});
 };
 var _user$project$Main$renderBoard = F2(
-	function (board, f) {
+	function (f, board) {
 		var renderCell = F2(
 			function (index, a) {
 				return A2(
@@ -8600,44 +8704,33 @@ var _user$project$Main$renderBoard = F2(
 			{ctor: '[]'},
 			A2(_elm_lang$core$List$indexedMap, renderRow, rectangle));
 	});
-var _user$project$Main$Model = F2(
-	function (a, b) {
-		return {board: a, currentPlayer: b};
-	});
-var _user$project$Main$Oh = {ctor: 'Oh'};
-var _user$project$Main$Ex = {ctor: 'Ex'};
+var _user$project$Main$model = {board: _user$project$Board$empty, currentPlayer: _user$project$Board$Ex, gameStatus: _user$project$Board$InGame};
 var _user$project$Main$switchPlayer = function (player) {
-	var _p1 = player;
-	if (_p1.ctor === 'Ex') {
-		return _user$project$Main$Oh;
+	var _p2 = player;
+	if (_p2.ctor === 'Ex') {
+		return _user$project$Board$Oh;
 	} else {
-		return _user$project$Main$Ex;
+		return _user$project$Board$Ex;
 	}
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p2 = msg;
-		var cell = function () {
-			var _p3 = model.currentPlayer;
-			if (_p3.ctor === 'Ex') {
-				return _user$project$Cell$X;
-			} else {
-				return _user$project$Cell$O;
-			}
-		}();
+		var _p3 = msg;
+		var newBoard = A3(_user$project$Board$setValueAt, _p3._0, model.currentPlayer, model.board);
 		return {
 			ctor: '_Tuple2',
 			_0: {
 				currentPlayer: _user$project$Main$switchPlayer(model.currentPlayer),
-				board: A3(_user$project$Board$setAt, _p2._0, cell, model.board)
+				board: newBoard,
+				gameStatus: _user$project$Board$check(newBoard)
 			},
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	});
-var _user$project$Main$model = {
-	board: _user$project$Board$fill(_user$project$Cell$Empty),
-	currentPlayer: _user$project$Main$Ex
-};
+var _user$project$Main$Model = F3(
+	function (a, b, c) {
+		return {board: a, currentPlayer: b, gameStatus: c};
+	});
 var _user$project$Main$Set = function (a) {
 	return {ctor: 'Set', _0: a};
 };
@@ -8665,7 +8758,7 @@ var _user$project$Main$renderCell = F2(
 						{
 							ctor: '::',
 							_0: _elm_lang$html$Html_Attributes$class(
-								_user$project$Cell$iconClass(cell)),
+								_user$project$Board$iconClassForPlayer(_p4._0)),
 							_1: {ctor: '[]'}
 						},
 						{ctor: '[]'}),
@@ -8679,11 +8772,15 @@ var _user$project$Main$view = function (model) {
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: A2(_user$project$Main$renderBoard, model.board, _user$project$Main$renderCell),
+			_0: A2(_user$project$Main$renderBoard, _user$project$Main$renderCell, model.board),
 			_1: {
 				ctor: '::',
 				_0: _user$project$Main$renderPlayer(model.currentPlayer),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: _user$project$Main$renderStatus(model.gameStatus),
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };

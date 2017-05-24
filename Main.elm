@@ -5,7 +5,6 @@ import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List exposing (map, indexedMap)
 import Board exposing (..)
-import Cell exposing (..)
 
 
 main : Program Never Model Msg
@@ -20,7 +19,6 @@ main =
 
 -- MODEL
 
-type Player = Ex | Oh
 
 switchPlayer : Player -> Player
 switchPlayer player =
@@ -29,14 +27,16 @@ switchPlayer player =
     Oh -> Ex
 
 type alias Model =
-  { board : Board Cell
+  { board : Board Player
   , currentPlayer : Player
+  , gameStatus : Status
   }
 
 model : Model
 model =
-  { board = fill Empty
+  { board = Board.empty
   , currentPlayer = Ex
+  , gameStatus = InGame
   }
 
 
@@ -48,14 +48,13 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Set index ->
-      let cell : Cell
-          cell = case model.currentPlayer of
-            Ex -> X
-            Oh -> O
+      let
+        newBoard = setValueAt index model.currentPlayer model.board
       in
         (
           { currentPlayer = switchPlayer model.currentPlayer
-          , board = setAt index cell model.board
+          , board = newBoard
+          , gameStatus = check newBoard
           }
           , Cmd.none
         )
@@ -63,27 +62,27 @@ update msg model =
 
 -- VIEW
 
-renderCell : Int -> Cell -> Html Msg
+renderCell : Int -> Cell Player -> Html Msg
 renderCell index cell =
   case cell of
     Empty ->
       div [onClick (Set index)] []
-    _ ->
+    Val v ->
       div []
-        [ Html.i [ class <| iconClass cell ] []]
+        [ Html.i [ class <| iconClassForPlayer v ] []]
 
 
-renderBoard : Board a -> (Int -> a -> Html msg) -> Html msg
-renderBoard board f =
+renderBoard : (Int -> Cell Player -> Html msg) -> Board Player -> Html msg
+renderBoard f board =
   let
-    rectangle : List (List a)
+    rectangle : List (List (Cell Player))
     rectangle = toRectangle board
 
-    renderCell : Int -> a -> Html msg
+    renderCell : Int -> Cell Player -> Html msg
     renderCell index a =
       td [] [f index a]
 
-    renderRow : Int -> List a -> Html msg
+    renderRow : Int -> List (Cell Player) -> Html msg
     renderRow row arr =
       tr [] (indexedMap (\i c -> renderCell (i + (row * Board.size)) c) arr)
   in
@@ -99,9 +98,22 @@ renderPlayer player =
   in
     p [] [text ("current player: " ++ playerName)]
 
+renderStatus : Status -> Html msg
+renderStatus status =
+  let
+    s =
+      case status of
+        Draw -> "Draw"
+        InGame -> "In game"
+        Win Ex _ -> "Ex wins!"
+        Win Oh _ -> "Oh wins!"
+  in
+    p [] [text ("Status: " ++ s)]
+
 view : Model -> Html Msg
 view model =
   div []
-    [ renderBoard model.board renderCell
+    [ renderBoard renderCell model.board
     , renderPlayer model.currentPlayer
+    , renderStatus model.gameStatus
     ]
